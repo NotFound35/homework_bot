@@ -122,6 +122,7 @@ def check_response(response):
         raise IndexError("Список домашних работ пуст")
     return homeworks
 
+
 def parse_status(homework):
     """
     Извлекает информацию в домашней работе.
