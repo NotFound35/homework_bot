@@ -110,11 +110,17 @@ def check_response(response):
     то функция должна вернуть список домашних работ,
     доступный в ответе API по ключу 'homeworks'
     """
-    try:
-        response = response['homeworks']
-    except KeyError:
-        logger.error('Отсутствует ключ')
-        raise KeyError('Отсутствует ключ')
+    if not isinstance(response, dict):
+        logging.error('Response не является словарем')
+        raise TypeError('Response не является словарем')
+    homeworks = response.get("homeworks")
+    if not isinstance(homeworks, list):
+        logging.error('Response не является списком')
+        raise TypeError('Response не является списком')
+    homeworks = response.get('homeworks')
+    if 'homeworks' not in response or 'current_date' not in response:
+        raise TypeError('Response не является словарем')
+    return homeworks
 
 
 def parse_status(homework):
