@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from datetime import time
+import time
 from http import HTTPStatus
 from typing import Dict
 
