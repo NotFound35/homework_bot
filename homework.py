@@ -51,6 +51,10 @@ class WrongStatusCodeError(Exception):
 
 
 def send_message(bot, message):
+    """Функция send_message() отправляет сообщение в Telegram чат,
+    определяемый переменной окружения TELEGRAM_CHAT_ID.
+    Принимает на вход два параметра: экземпляр класса Bot
+    и строку с текстом сообщения."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logger.INFO('сообщение отправлено')
@@ -61,6 +65,11 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
+    """Функция get_api_answer() делает запрос
+    к единственному эндпоинту API-сервиса.
+    В качестве параметра функция получает временную метку.
+    В случае успешного запроса должна вернуть ответ API,
+    преобразовав его из формата JSON к типам данных Python."""
     params = {
         'from_date': current_timestamp}
     try:
@@ -82,6 +91,12 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
+    """Функция check_response() проверяет ответ API на корректность.
+    В качестве параметра функция получает ответ API,
+    приведенный к типам данных Python.
+    Если ответ API соответствует ожиданиям,
+    то функция должна вернуть список домашних работ,
+    доступный в ответе API по ключу 'homeworks'"""
     try:
         response = response['homework']
     except KeyError:
@@ -90,6 +105,12 @@ def check_response(response):
 
 
 def parse_status(homework):
+    """Функция parse_status() извлекает из информации о
+    конкретной домашней работе статус этой работы.
+    В качестве параметра функция получает только один элемент
+    из списка домашних работ. В случае успеха, функция возвращает
+    подготовленную для отправки в Telegram строку,
+    содержащую один из вердиктов словаря HOMEWORK_STATUSES"""
     if not isinstance(homework, Dict):
         raise TypeError('Это не словарь!')
     homework_name = homework.get('homework_name')
@@ -106,6 +127,10 @@ def parse_status(homework):
 
 
 def check_tokens():
+    """Функция check_tokens() проверяет доступность переменных окружения,
+    которые необходимы для работы программы.
+    Если отсутствует хотя бы одна переменная окружения —
+    ункция должна вернуть False, иначе — True."""
     if PRACTICUM_TOKEN or TELEGRAM_TOKEN or TELEGRAM_CHAT_ID:
         return True
     elif PRACTICUM_TOKEN is None:
@@ -120,7 +145,11 @@ def check_tokens():
 
 
 def main():
-    """Основная логика работы бота."""
+    """Основная логика работы бота.
+    Делает запрос к API. Проверяет ответ.
+    При наличии обновлений получает статус работы из обновления
+    и отправляет сообщение в Telegram.
+    Ждет некоторое время и делает новый запрос."""
     if not check_tokens():
         message = 'Отсутствуют токены чата'
         logger.critical(message)
