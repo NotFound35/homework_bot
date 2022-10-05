@@ -111,16 +111,10 @@ def check_response(response):
     доступный в ответе API по ключу 'homeworks'
     """
     try:
-        homeworks = response['homeworks']
+        response = response['homeworks']
     except KeyError:
         logger.error('Отсутствует ключ')
         raise KeyError('Отсутствует ключ')
-    try:
-        homeworks = homeworks[0]
-    except KeyError:
-        logger.error("Список домашних работ пуст")
-        raise KeyError("Список домашних работ пуст")
-    return homeworks
 
 
 def parse_status(homework):
