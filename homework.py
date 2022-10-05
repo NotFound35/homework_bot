@@ -50,9 +50,9 @@ def send_message(bot, message):
     и строку с текстом сообщения.
     """
     try:
-        logger.INFO('Начала отправки сообщения')
+        logger.info('Начала отправки сообщения')
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-        logger.INFO('сообщение отправлено')
+        logger.info('сообщение отправлено')
     except Exception as error:
         raise NotSendMessageError(f'Бот не отправил сообщение {error}')
 
@@ -67,7 +67,7 @@ def get_api_answer(current_timestamp):
     params = {
         'from_date': current_timestamp}
     try:
-        logger.INFO('Запрос к информации о домашке')
+        logger.info('Запрос к информации о домашке')
         response = requests.get(
             url=ENDPOINT,
             headers=HEADERS,
@@ -138,12 +138,17 @@ def check_tokens():
     Если отсутствует хотя бы одна переменная окружения —
     ункция должна вернуть False, иначе — True.
     """
-    def all(iterable):
-        token = [TELEGRAM_CHAT_ID, TELEGRAM_TOKEN, PRACTICUM_TOKEN]
-        for token in iterable:
-            return True
+    if PRACTICUM_TOKEN or TELEGRAM_TOKEN or TELEGRAM_CHAT_ID:
+        return True
+    elif PRACTICUM_TOKEN is None:
+        logger.info('Ошибка PRAKTIKUM_TOKEN')
         return False
-    return all
+    elif TELEGRAM_TOKEN is None:
+        logger.info('Ошибка TELEGRAM_TOKEN')
+        return False
+    elif TELEGRAM_CHAT_ID is None:
+        logger.info('Ошибка CHAT_ID')
+        return False
 
 
 def main():
