@@ -111,7 +111,7 @@ def check_response(response):
     доступный в ответе API по ключу 'homeworks'
     """
     try:
-        homeworks = response['homeworks']
+        homeworks = response['homework']
     except KeyError:
         logger.error('Отсутствует ключ')
         raise KeyError('Отсутствует ключ')
