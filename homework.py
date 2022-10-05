@@ -40,16 +40,19 @@ HOMEWORK_STATUSES = {
 
 class NotSendMessageError(Exception):
     """Классы ошибок."""
+
     pass
 
 
 class NonStatusCodeError(Exception):
     """Классы ошибок."""
+
     pass
 
 
 class WrongStatusCodeError(Exception):
     """Классы ошибок."""
+
     pass
 
 
@@ -72,7 +75,7 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """
-    Функция get_api_answer() делает запрос к единственному эндпоинту API-сервиса.
+    Функция get_api_answer() делает запрос к API-сервису.
     В качестве параметра функция получает временную метку.
     В случае успешного запроса должна вернуть ответ API,
     преобразовав его из формата JSON к типам данных Python.
@@ -116,7 +119,7 @@ def check_response(response):
 
 def parse_status(homework):
     """
-    Функция parse_status() извлекает из информации о конкретной домашней работе статус этой работы.
+    Функция parse_status() извлекает информацию в домашней работе.
 
     В качестве параметра функция получает только один элемент
     из списка домашних работ. В случае успеха, функция возвращает
