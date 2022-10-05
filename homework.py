@@ -9,6 +9,9 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
+from exception import (
+    NotSendMessageError, NonStatusCodeError, WrongStatusCodeError)
+
 logging.basicConfig(
     level=logging.INFO,
     filename='main.log',
@@ -38,24 +41,6 @@ HOMEWORK_STATUSES = {
 }
 
 
-class NotSendMessageError(Exception):
-    """Классы ошибок."""
-
-    pass
-
-
-class NonStatusCodeError(Exception):
-    """Классы ошибок."""
-
-    pass
-
-
-class WrongStatusCodeError(Exception):
-    """Классы ошибок."""
-
-    pass
-
-
 def send_message(bot, message):
     """
     Отправляет сообщение в Telegram чат.
@@ -65,11 +50,10 @@ def send_message(bot, message):
     и строку с текстом сообщения.
     """
     try:
+        logger.INFO('Начала отправки сообщения')
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logger.INFO('сообщение отправлено')
     except Exception as error:
-        logger.error[f'Ошибка {error}']
-        message = 'Сообщение не отправлено'
         raise NotSendMessageError(f'Бот не отправил сообщение {error}')
 
 
@@ -83,6 +67,7 @@ def get_api_answer(current_timestamp):
     params = {
         'from_date': current_timestamp}
     try:
+        logger.INFO('Запрос к информации о домашке')
         response = requests.get(
             url=ENDPOINT,
             headers=HEADERS,
@@ -115,11 +100,9 @@ def check_response(response):
         raise TypeError('Response не является словарем')
     homeworks = response.get("homeworks")
     if not isinstance(homeworks, list):
-        logging.error('Response не является списком')
         raise TypeError('Response не является списком')
-    homeworks = response.get('homeworks')
     if 'homeworks' not in response or 'current_date' not in response:
-        raise TypeError('Response не является словарем')
+        raise TypeError('Response не является ключем')
     return homeworks
 
 
@@ -155,17 +138,12 @@ def check_tokens():
     Если отсутствует хотя бы одна переменная окружения —
     ункция должна вернуть False, иначе — True.
     """
-    if PRACTICUM_TOKEN or TELEGRAM_TOKEN or TELEGRAM_CHAT_ID:
-        return True
-    elif PRACTICUM_TOKEN is None:
-        logger.info('Ошибка PRAKTIKUM_TOKEN')
+    def all(iterable):
+        token = [TELEGRAM_CHAT_ID, TELEGRAM_TOKEN, PRACTICUM_TOKEN]
+        for token in iterable:
+            return True
         return False
-    elif TELEGRAM_TOKEN is None:
-        logger.info('Ошибка TELEGRAM_TOKEN')
-        return False
-    elif TELEGRAM_CHAT_ID is None:
-        logger.info('Ошибка CHAT_ID')
-        return False
+    return all
 
 
 def main():
@@ -183,24 +161,24 @@ def main():
         sys.exit(message)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = 1663665682
-    error_message = ''
+    previos_message = ''
     while True:
         try:
             response = get_api_answer(current_timestamp)
             statuses = check_response(response)
             if statuses:
                 message = parse_status(statuses)
-                if message != error_message:
+                if message != previos_message:
                     send_message(bot, message)
-                    error_message = message
+                    previos_message = message
             current_timestamp = response.get('current_date', current_timestamp)
             time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(f'Сбой в работе программы: {error}')
-            if message != error_message:
+            if message != previos_message:
                 send_message(bot, message)
-                error_message = message
+                previos_message = message
         finally:
             time.sleep(RETRY_TIME)
 
