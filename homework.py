@@ -12,12 +12,6 @@ from dotenv import load_dotenv
 from exception import (
     NotSendMessageError, NonStatusCodeError, WrongStatusCodeError)
 
-logging.basicConfig(
-    level=logging.INFO,
-    filename='main.log',
-    format='%(asctime)s, %(levelname)s, %(message)s, %{funcName)s, %(lineno)s',
-    filemode='a'
-)
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.info('Начинаем работать')
@@ -72,17 +66,17 @@ def get_api_answer(current_timestamp):
             url=ENDPOINT,
             headers=HEADERS,
             params=params)
-        if response.status_code != HTTPStatus.OK:
-            message = 'Ошибка сервера'
-            raise NonStatusCodeError(message)
-        logger.info('Соединение с сервером установлено')
-        return response.json()
     except requests.RequestException as error:
         message = f'Код ответа API (RequestException): {error}'
         raise WrongStatusCodeError(message)
     except ValueError as error:
         message = f'Код ответа API (ValueError): {error}'
         raise WrongStatusCodeError(message)
+    if response.status_code != HTTPStatus.OK:
+        message = 'Ошибка сервера'
+        raise NonStatusCodeError(message)
+    logger.info('Соединение с сервером установлено')
+    return response.json()
 
 
 def check_response(response):
@@ -96,7 +90,6 @@ def check_response(response):
     доступный в ответе API по ключу 'homeworks'
     """
     if not isinstance(response, dict):
-        logging.error('Response не является словарем')
         raise TypeError('Response не является словарем')
     homeworks = response.get("homeworks")
     if not isinstance(homeworks, list):
@@ -118,13 +111,13 @@ def parse_status(homework):
     if not isinstance(homework, Dict):
         raise TypeError('Это не словарь!')
     homework_name = homework.get('homework_name')
-    if homework_name is None:
+    if not homework_name:
         raise KeyError('Имя не существует')
     homework_status = homework.get('status')
-    if homework_status is None:
+    if not homework_status:
         raise KeyError('Статус не существует')
     verdict = HOMEWORK_STATUSES.get(homework_status)
-    if verdict is None:
+    if not verdict:
         raise KeyError(f'Ошибка статуса {verdict}')
     logging.info(f'Новый стату работы {verdict}')
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -138,17 +131,12 @@ def check_tokens():
     Если отсутствует хотя бы одна переменная окружения —
     ункция должна вернуть False, иначе — True.
     """
-    if PRACTICUM_TOKEN or TELEGRAM_TOKEN or TELEGRAM_CHAT_ID:
-        return True
-    elif PRACTICUM_TOKEN is None:
-        logger.info('Ошибка PRAKTIKUM_TOKEN')
-        return False
-    elif TELEGRAM_TOKEN is None:
-        logger.info('Ошибка TELEGRAM_TOKEN')
-        return False
-    elif TELEGRAM_CHAT_ID is None:
-        logger.info('Ошибка CHAT_ID')
-        return False
+    def all(iterable):
+        tok = [TELEGRAM_CHAT_ID, PRACTICUM_TOKEN, TELEGRAM_TOKEN]
+        for tok in iterable:
+            if not tok:
+                return False
+            return True
 
 
 def main():
@@ -173,14 +161,16 @@ def main():
             statuses = check_response(response)
             if statuses:
                 message = parse_status(statuses)
-                if message != previos_message:
-                    send_message(bot, message)
-                    previos_message = message
+            else:
+                message = 'Список пуст'
             current_timestamp = response.get('current_date', current_timestamp)
             time.sleep(RETRY_TIME)
+            if message != previos_message:
+                send_message(bot, message)
+                previos_message = message
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            logger.error(f'Сбой в работе программы: {error}')
+            logger.error(message)
             if message != previos_message:
                 send_message(bot, message)
                 previos_message = message
@@ -189,4 +179,12 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.INFO,
+        filename='main.log',
+        format=(
+            '%(asctime)s, %(levelname)s, %(message)s, %{funcName)s, %(lineno)s'
+        ),
+        filemode='a'
+    )
     main()
