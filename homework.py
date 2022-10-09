@@ -137,7 +137,6 @@ def check_tokens():
             if not tok:
                 return False
             return True
-    return all(True)
 
 
 def main():
