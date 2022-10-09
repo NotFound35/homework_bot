@@ -131,12 +131,8 @@ def check_tokens():
     Если отсутствует хотя бы одна переменная окружения —
     ункция должна вернуть False, иначе — True.
     """
-    def all(iterable):
-        tok = [TELEGRAM_CHAT_ID, PRACTICUM_TOKEN, TELEGRAM_TOKEN]
-        for tok in iterable:
-            if not tok:
-                return False
-            return True
+    tok = [TELEGRAM_CHAT_ID, PRACTICUM_TOKEN, TELEGRAM_TOKEN]
+    return all(tok)
 
 
 def main():
